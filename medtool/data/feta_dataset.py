@@ -30,27 +30,25 @@ class FeTA(Dataset):
     def __init__(
         self,
         data, 
-        labels = None
+        masks = None
     ):
         super().__init__()
         self.data = data
-        self.labels = labels
-    
+        self.masks = masks
+        self.class_values = range(1, 8)
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, item):
         image_path  = self.data[item]
-        image = nib.load(image_path).get_fdata()
+        image = nib.load(image_path).get_fdata()[:, :, item % 256]
 
-        if self.labels:
-            labels_path = self.labels[item]
-            labels = nib.load(labels_path).get_fdata()
-            return {
-                'image':  torch.tensor(image, dtype=torch.float),
-                'labels': torch.tensor(labels, dtype=torch.float)
-            }
+        if self.masks:
+            masks_path = self.masks[item]
+            mask = nib.load(masks_path).get_fdata()[:, :, item % 256]
+            masks = [(mask == v) for v in self.class_values]
+            
+            return torch.tensor([image], dtype=torch.float), \
+                   torch.tensor(masks, dtype=torch.float)
         else:
-            return {
-                'image':  torch.tensor(image, dtype=torch.float)
-            }
+            return torch.tensor([image], dtype=torch.float)
