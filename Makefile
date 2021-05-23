@@ -72,14 +72,17 @@ else
 	@echo ">>> New virtualenv created. Activate with:\nworkon $(PROJECT_NAME)"
 endif
 
-## Test python environment is setup correctly
-test_environment:
-	$(PYTHON_INTERPRETER) test_environment.py
-
 #################################################################################
 # PROJECT RULES                                                                 #
 #################################################################################
 
+# .PHONY: local-run
+# local-run:
+# 	@uvicorn main:app --reload --app-dir mesh_labeler/server/
+
+.PHONY: local-run
+local-run:
+	python3 medtool/train.py configs/tissue_annotation.json
 
 
 #################################################################################
