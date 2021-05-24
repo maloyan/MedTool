@@ -84,7 +84,7 @@ valid_epoch = smp.utils.train.ValidEpoch(
 max_score = 0
 patience = 0
 
-for i in range(0, 150):
+for _ in range(150):
     train_logs = train_epoch.run(train_loader)
     valid_logs = valid_epoch.run(valid_loader)
 
