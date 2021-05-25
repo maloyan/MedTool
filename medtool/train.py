@@ -1,6 +1,8 @@
 import json
 import sys
 
+import nibabel as nib
+import numpy as np
 import albumentations as A
 import segmentation_models_pytorch as smp
 import torch
@@ -19,13 +21,23 @@ data, labels = feta_dataset.get_path(config['data_path'])
 train_data, valid_data     = data[:65], data[65:]
 train_labels, valid_labels = labels[:65], labels[65:]
 
+# train_dataset = feta_dataset.FeTA(
+#     sorted(train_data * 256), 
+#     sorted(train_labels * 256)
+# )
+# valid_dataset = feta_dataset.FeTA(
+#     sorted(valid_data * 256), 
+#     sorted(valid_labels * 256)
+# )
+
+
 train_dataset = feta_dataset.FeTA(
-    sorted(train_data * 256), 
-    sorted(train_labels * 256)
+    np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in train_data]).reshape(-1, 256, 256), 
+    np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in train_labels]).reshape(-1, 256, 256),   
 )
 valid_dataset = feta_dataset.FeTA(
-    sorted(valid_data * 256), 
-    sorted(valid_labels * 256)
+    np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in valid_data]).reshape(-1, 256, 256), 
+    np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in valid_labels]).reshape(-1, 256, 256), 
 )
 
 train_loader = DataLoader(
