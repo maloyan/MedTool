@@ -50,6 +50,7 @@ model = smp.UnetPlusPlus(
     classes         = config["classes"],
     activation      = config["activation"]
 )
+model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4])
 
 loss = smp.utils.base.SumOfLosses(
     smp.utils.losses.DiceLoss(),
@@ -91,13 +92,14 @@ for _ in range(150):
     wandb.log({
         "train_loss" : train_logs['dice_loss + bce_loss'],
         "val_loss"   : valid_logs['dice_loss + bce_loss'],
-        "IoU"        : valid_logs['iou_score']
+        "IoU_train"  : train_logs['iou_score'], 
+        "IoU_val"    : valid_logs['iou_score']
     })
 
     optimizer.param_groups[0]['lr'] *= 0.97
     if max_score < valid_logs['iou_score']:
         max_score = valid_logs['iou_score']
-        torch.save(model, f"models/saved/{config['model_name']}.pth")
+        torch.save(model.module, f"models/{config['model_name']}.pt")
         print('Model saved!')
         patience = 0
     else:
