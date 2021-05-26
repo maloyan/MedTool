@@ -43,7 +43,7 @@ class FeTA(Dataset):
         image  = self.data[item]
         # image = nib.load(image_path).get_fdata()[:, :, item % 256]
 
-        if self.masks:
+        if self.masks is not None:
             mask = self.masks[item]
             # mask = nib.load(masks_path).get_fdata()[:, :, item % 256]
             masks = [(mask == v) for v in self.class_values]

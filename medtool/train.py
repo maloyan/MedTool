@@ -63,7 +63,7 @@ model = smp.UnetPlusPlus(
     activation      = config["activation"]
 )
 model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4])
-
+print("PARALLEL")
 loss = smp.utils.base.SumOfLosses(
     smp.utils.losses.DiceLoss(),
     smp.utils.losses.BCELoss()
@@ -96,7 +96,7 @@ valid_epoch = smp.utils.train.ValidEpoch(
 
 max_score = 0
 patience = 0
-
+print("TRAINING")
 for _ in range(150):
     train_logs = train_epoch.run(train_loader)
     valid_logs = valid_epoch.run(valid_loader)

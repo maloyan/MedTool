@@ -1,8 +1,8 @@
 {
     "model_name": "unetpp_resnet34",
     "data_path": "../feta_2.0/",
-    "batch_size": 10,
-    "num_workers": 12,
+    "batch_size": 100,
+    "num_workers": 24,
     
     "model": "resnet34",
     "pretrained": "imagenet",
