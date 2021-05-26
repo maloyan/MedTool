@@ -16,24 +16,25 @@ wandb.init(project='feta')
 with open(sys.argv[1], 'r') as f:
     config = json.load(f)
 
+transform = A.Compose([
+    A.Normalize(),
+    A.CropNonEmptyMaskIfExists(),
+    A.OneOf([
+        A.RandomRotate90(p=0.7),
+        A.Flip(p=0.7)
+    ], p=0.4)
+], p=1)
+
+
 data, labels = feta_dataset.get_path(config['data_path'])
 
 train_data, valid_data     = data[:65], data[65:]
 train_labels, valid_labels = labels[:65], labels[65:]
 
-# train_dataset = feta_dataset.FeTA(
-#     sorted(train_data * 256), 
-#     sorted(train_labels * 256)
-# )
-# valid_dataset = feta_dataset.FeTA(
-#     sorted(valid_data * 256), 
-#     sorted(valid_labels * 256)
-# )
-
-
 train_dataset = feta_dataset.FeTA(
     np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in train_data]).reshape(-1, 256, 256), 
-    np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in train_labels]).reshape(-1, 256, 256),   
+    np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in train_labels]).reshape(-1, 256, 256),
+    augmentation = transform
 )
 valid_dataset = feta_dataset.FeTA(
     np.array([np.moveaxis(nib.load(i).get_fdata(), -1, 0) for i in valid_data]).reshape(-1, 256, 256), 

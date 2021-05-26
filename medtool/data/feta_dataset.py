@@ -30,7 +30,8 @@ class FeTA(Dataset):
     def __init__(
         self,
         data, 
-        masks = None
+        masks = None,
+        augmentation = None
     ):
         super().__init__()
         self.data = data
@@ -41,14 +42,18 @@ class FeTA(Dataset):
 
     def __getitem__(self, item):
         image  = self.data[item]
-        # image = nib.load(image_path).get_fdata()[:, :, item % 256]
 
         if self.masks is not None:
             mask = self.masks[item]
-            # mask = nib.load(masks_path).get_fdata()[:, :, item % 256]
             masks = [(mask == v) for v in self.class_values]
+            if self.augmentation:
+                sample = self.augmentation(image=image, masks=masks)
+                aug_img, aug_masks = sample['image'],  sample['masks']
             
-            return torch.tensor([image], dtype=torch.float), \
-                   torch.tensor(masks, dtype=torch.float)
+            return torch.tensor([aug_img], dtype=torch.float), \
+                   torch.tensor(aug_masks, dtype=torch.float)
         else:
-            return torch.tensor([image], dtype=torch.float)
+            if self.augmentation:
+                sample = self.augmentation(image=image)
+                aug_img, aug_masks = sample['image'],  sample['masks']
+            return torch.tensor([aug_img], dtype=torch.float)
