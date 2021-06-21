@@ -1,7 +1,12 @@
-FROM nvcr.io/nvidia/pytorch:21.05-py3
+FROM ubuntu:20.04
+
+LABEL key="maloyan"
+RUN apt-get update && apt-get install -y \
+    python3-pip
 
 WORKDIR /workspace
 
-COPY requirements.txt /workspace/requirements.txt
+COPY . /workspace/
 
 RUN pip install -r requirements.txt
+RUN pip install -e .

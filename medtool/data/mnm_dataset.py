@@ -5,25 +5,36 @@ import torch
 from torch.utils.data import Dataset
 
 
-def get_path(dir):
-    path_dict = {"dseg.json": [], "dseg.nii": [], "T2w.json": [], "T2w.nii": []}
-    for i in range(1, 81):
-        patient_path = os.path.join(dir, "sub" + f"-{i:03}", "anat")
-        patient_files = os.listdir(patient_path)
-        for patient_file in patient_files:
-            for key in path_dict.keys():
-                if key in patient_file:
-                    path_dict[key].append(os.path.join(patient_path, patient_file))
-    return path_dict["T2w.nii"], path_dict["dseg.nii"]
+def get_data_path(dir):
+    path_dict = {"image": [], "gt": []}
+    for i in range(1, 161):
+        patient_path = os.path.join(dir, f"{i:03}")
+        for ls in ["LA", "SA"]:
+            for key in ["ED", "ES"]:
+                path_dict["image"].append(
+                    os.path.join(patient_path, f"{i:003}_{ls}_{key}.nii.gz")
+                )
+                path_dict["gt"].append(
+                    os.path.join(patient_path, f"{i:003}_{ls}_{key}_gt.nii.gz")
+                )
+    return path_dict["image"], path_dict["gt"]
 
 
-class FeTA(Dataset):
+def get_train_val_path(train_dir, val_dir=None, split=0.8):
+    if val_dir is None:
+        image, gt = get_data_path(train_dir)
+        total = int(len(image) * split)
+        return image[:total], gt[:total], image[total:], gt[total:]
+    return get_data_path(train_dir), get_data_path(val_dir)
+
+
+class MnM(Dataset):
     def __init__(self, data, masks=None, augmentation=None):
         super().__init__()
         self.data = data
         self.masks = masks
         self.augmentation = augmentation
-        self.class_values = range(1, 8)
+        self.class_values = range(1, 4)
 
     def __len__(self):
         return len(self.data)

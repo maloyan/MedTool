@@ -11,11 +11,12 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 import medtool.data.feta_dataset as feta_dataset
+import medtool.data.mnm_dataset as mnm_dataset
 
 with open(sys.argv[1], "r") as f:
     config = json.load(f)
 
-wandb.init(config=config, project="feta")
+wandb.init(config=config, project=config["project"])
 
 transform = A.Compose(
     [
@@ -38,10 +39,14 @@ transform = A.Compose(
 )
 
 
-data, labels = feta_dataset.get_path(config["data_path"])
-
-train_data_path, valid_data_path = data[:65], data[65:]
-train_labels_path, valid_labels_path = labels[:65], labels[65:]
+(
+    train_data_path,
+    train_labels_path,
+    valid_data_path,
+    valid_labels_path,
+) = mnm_dataset.get_train_val_path(
+    train_dir=config["train_dir"], val_dir=config["val_dir"]
+)
 
 train_data = np.array(
     [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_data_path]
@@ -50,30 +55,22 @@ train_labels = np.array(
     [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_labels_path]
 ).reshape(-1, 256, 256)
 
-train_data_new = []
-train_labels_new = []
 
-for i, j in tqdm(zip(train_data, train_labels), total=len(train_data_path)):
-    if j.sum() == 0:
-        rnd = np.random.rand()
-        if rnd > 0.7:
-            train_data_new.append(i)
-            train_labels_new.append(j)
-    else:
-        train_data_new.append(i)
-        train_labels_new.append(j)
-
-train_dataset = feta_dataset.FeTA(
-    np.array(train_data_new).reshape(-1, 256, 256),
-    np.array(train_labels_new).reshape(-1, 256, 256),
+train_dataset = mnm_dataset.MnM(
+    np.array(
+        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_data_path]
+    ).reshape(-1, 256, 256),
+    np.array(
+        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_labels_path]
+    ).reshape(-1, 256, 256),
     augmentation=transform,
 )
-valid_dataset = feta_dataset.FeTA(
+valid_dataset = mnm_dataset.MnM(
     np.array(
         [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in valid_data_path]
     ).reshape(-1, 256, 256),
     np.array(
-        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in valid_labels_path]
+        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_labels_path]
     ).reshape(-1, 256, 256),
 )
 
