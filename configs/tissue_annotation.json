@@ -1,14 +1,16 @@
 {
-    "model_name": "unetpp_resnet34",
-    "data_path": "../feta_2.0/",
+    "project": "feta",
+    "model_name": "unetpp_se_resnext50_32x4d",
+    "data_path": "../feta_2.1/",
     "batch_size": 100,
     "num_workers": 24,
     
-    "model": "resnet34",
+    "model": "se_resnext50_32x4d",
     "pretrained": "imagenet",
     "in_channels": 1,
     "classes": 7,
     "activation": "sigmoid",
     "device": "cuda",
-    "patience": 5
+    "patience": 8,
+    "decay": 0.98
 }

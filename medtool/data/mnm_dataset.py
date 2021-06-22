@@ -5,9 +5,9 @@ import torch
 from torch.utils.data import Dataset
 
 
-def get_data_path(dir):
+def get_data_path(dir, patient_list):
     path_dict = {"image": [], "gt": []}
-    for i in range(1, 161):
+    for i in patient_list:
         patient_path = os.path.join(dir, f"{i:03}")
         for ls in ["LA", "SA"]:
             for key in ["ED", "ES"]:
@@ -22,10 +22,13 @@ def get_data_path(dir):
 
 def get_train_val_path(train_dir, val_dir=None, split=0.8):
     if val_dir is None:
-        image, gt = get_data_path(train_dir)
+        image, gt = get_data_path(train_dir, range(1, 161))
         total = int(len(image) * split)
         return image[:total], gt[:total], image[total:], gt[total:]
-    return get_data_path(train_dir), get_data_path(val_dir)
+    else:
+        train_image, train_gt = get_data_path(train_dir, range(1, 161))
+        val_image, val_gt = get_data_path(val_dir, range(161, 201))
+        return train_image, train_gt, val_image, val_gt
 
 
 class MnM(Dataset):

@@ -20,6 +20,7 @@ wandb.init(config=config, project=config["project"])
 
 transform = A.Compose(
     [
+        A.Resize(height=256, width=256, always_apply=True, p=1),
         A.OneOf(
             [
                 A.HorizontalFlip(p=0.5),
@@ -28,14 +29,13 @@ transform = A.Compose(
             ],
             p=0.5,
         ),
-        A.MedianBlur(blur_limit=3, p=0.01),
+        # A.MedianBlur(blur_limit=3, p=0.01),
         A.ShiftScaleRotate(
             shift_limit=0.0625, scale_limit=0.2, rotate_limit=45, p=0.05
         ),
         A.CoarseDropout(p=0.05),
-        A.Resize(height=256, width=256, always_apply=True, p=1),
     ],
-    p=0.8,
+    p=1,
 )
 
 
@@ -45,33 +45,36 @@ transform = A.Compose(
     valid_data_path,
     valid_labels_path,
 ) = mnm_dataset.get_train_val_path(
-    train_dir=config["train_dir"], val_dir=config["val_dir"]
+    train_dir=config["train_dir"]
 )
 
-train_data = np.array(
-    [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_data_path]
-).reshape(-1, 256, 256)
-train_labels = np.array(
-    [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_labels_path]
-).reshape(-1, 256, 256)
+train_data = []
+train_labels = []
+val_data = []
+val_labels = []
+
+for i in train_data_path:
+    train_data.extend(np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0))
+
+for i in train_labels_path:
+    train_labels.extend(np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0))
+
+for i in valid_data_path:
+    val_data.extend(np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0))
+
+for i in valid_labels_path:
+    val_labels.extend(np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0))
 
 
 train_dataset = mnm_dataset.MnM(
-    np.array(
-        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_data_path]
-    ).reshape(-1, 256, 256),
-    np.array(
-        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_labels_path]
-    ).reshape(-1, 256, 256),
+    train_data,
+    train_labels,
     augmentation=transform,
 )
 valid_dataset = mnm_dataset.MnM(
-    np.array(
-        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in valid_data_path]
-    ).reshape(-1, 256, 256),
-    np.array(
-        [np.moveaxis(np.asarray(nib.load(i).dataobj), -1, 0) for i in train_labels_path]
-    ).reshape(-1, 256, 256),
+    val_data, 
+    val_labels,
+    augmentation=transform
 )
 
 train_loader = DataLoader(
@@ -127,7 +130,7 @@ valid_epoch = smp.utils.train.ValidEpoch(
     verbose=True,
 )
 
-max_score = 0
+min_loss = 100
 patience = 0
 print("TRAINING")
 for _ in range(150):
@@ -144,8 +147,8 @@ for _ in range(150):
     )
 
     optimizer.param_groups[0]["lr"] *= config["decay"]
-    if max_score < valid_logs["iou_score"]:
-        max_score = valid_logs["iou_score"]
+    if min_loss > valid_logs["dice_loss + bce_loss"]:
+        min_loss = valid_logs["dice_loss + bce_loss"]
         torch.save(model.module, f"models/{config['model_name']}.pt")
         print("Model saved!")
         patience = 0

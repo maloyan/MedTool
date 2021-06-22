@@ -2,14 +2,15 @@
     "project": "MnM-2",
     "train_dir": "../MnM-2/training",
     "val_dir": "../MnM-2/validation",
-    "model_name": "mnm_unetpp_resnet34",
+    "model_name": "mnm_unetpp_se_resnext50_32x4d",
     "batch_size": 100,
     "num_workers": 24,
-    "model": "resnet50",
+    "model": "se_resnext50_32x4d",
     "pretrained": "imagenet",
     "in_channels": 1,
-    "classes": 7,
+    "classes": 3,
     "activation": "sigmoid",
     "device": "cuda",
-    "patience": 5
+    "patience": 5,
+    "decay": 0.98
 }
