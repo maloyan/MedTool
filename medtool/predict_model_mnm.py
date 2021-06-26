@@ -9,7 +9,7 @@ import medtool.data.mnm_dataset as mnm_dataset
 
 outputDir = "./Submission"
 
-model = torch.load("./models/mnm_unetpp_se_resnext50_32x4d.pt")
+model = torch.load("./models/mnm_unetpp_resnet34.pt")
 model.to("cuda")
 model.eval()
 
