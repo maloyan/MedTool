@@ -45,7 +45,8 @@ transform = A.Compose(
     valid_data_path,
     valid_labels_path,
 ) = mnm_dataset.get_train_val_path(
-    train_dir=config["train_dir"]
+    train_dir=config["train_dir"],
+    split=0.9
 )
 
 train_data = []
@@ -91,14 +92,23 @@ valid_loader = DataLoader(
     num_workers=config["num_workers"],
     drop_last=False,
 )
+if config["model"] == "unetpp":
+    model = smp.UnetPlusPlus(
+        encoder_name=config["backbone"],
+        encoder_weights=config["pretrained"],
+        in_channels=config["in_channels"],
+        classes=config["classes"],
+        activation=config["activation"],
+    )
+elif config["model"] == "unet":
+    model = smp.Unet(
+        encoder_name=config["backbone"],
+        encoder_weights=config["pretrained"],
+        in_channels=config["in_channels"],
+        classes=config["classes"],
+        activation=config["activation"],
+    )
 
-model = smp.UnetPlusPlus(
-    encoder_name=config["model"],
-    encoder_weights=config["pretrained"],
-    in_channels=config["in_channels"],
-    classes=config["classes"],
-    activation=config["activation"],
-)
 model = torch.nn.DataParallel(model, device_ids=[0, 1, 2, 3, 4])
 print("PARALLEL")
 loss = smp.utils.base.SumOfLosses(
@@ -109,7 +119,7 @@ metrics = [smp.utils.metrics.IoU(threshold=0.5)]
 
 optimizer = torch.optim.Adam(
     [
-        dict(params=model.parameters(), lr=0.0001),
+        dict(params=model.parameters(), lr=config["lr"]),
     ]
 )
 
