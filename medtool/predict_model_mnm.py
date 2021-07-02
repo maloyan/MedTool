@@ -2,6 +2,7 @@ import os
 
 import nibabel as nib
 import numpy as np
+import ttach as tta
 import torch
 from torch.utils.data import DataLoader
 
@@ -13,12 +14,17 @@ model = torch.load("./models/mnm_unetpp_resnet34.pt")
 model.to("cuda")
 model.eval()
 
+model = tta.SegmentationTTAWrapper(
+    model,
+    tta.aliases.d4_transform(),
+    merge_mode="mean"
+)
 
 def get_mask(img, original_shape):
     summed_up_masks = np.zeros(img[0].shape)
     for ind, i in enumerate(img):
         inversed_summed_up = ~((summed_up_masks).astype(bool))
-        summed_up_masks += (i > 0.4) * inversed_summed_up * (ind + 1)
+        summed_up_masks += (i > 0.3) * inversed_summed_up * (ind + 1)
     res = np.zeros(original_shape)
     if original_shape[0] < 256 or original_shape[1] < 256:
         res = summed_up_masks[: original_shape[0], : original_shape[1]]

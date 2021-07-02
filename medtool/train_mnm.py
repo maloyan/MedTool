@@ -23,17 +23,24 @@ transform = A.Compose(
         A.Resize(height=256, width=256, always_apply=True, p=1),
         A.OneOf(
             [
-                A.HorizontalFlip(p=0.5),
-                A.VerticalFlip(p=0.5),
-                A.RandomRotate90(p=0.5),
+                A.HorizontalFlip(p=1),
+                A.VerticalFlip(p=1),
+                A.RandomRotate90(p=1),
             ],
             p=0.5,
         ),
-        # A.MedianBlur(blur_limit=3, p=0.01),
-        A.ShiftScaleRotate(
-            shift_limit=0.0625, scale_limit=0.2, rotate_limit=45, p=0.05
+        A.OneOf(
+            [
+                A.GaussNoise(p=1),
+                A.RandomGamma(p=1),
+                A.RandomBrightnessContrast(p=1),
+            ],
+            p=0.2,
         ),
-        A.CoarseDropout(p=0.05),
+        A.ShiftScaleRotate(
+            shift_limit=0.0625, scale_limit=0.2, rotate_limit=180, p=0.2
+        ),
+        A.CoarseDropout(p=0.1),
     ],
     p=1,
 )
@@ -44,10 +51,7 @@ transform = A.Compose(
     train_labels_path,
     valid_data_path,
     valid_labels_path,
-) = mnm_dataset.get_train_val_path(
-    train_dir=config["train_dir"],
-    split=0.9
-)
+) = mnm_dataset.get_train_val_path(train_dir=config["train_dir"], split=0.9)
 
 train_data = []
 train_labels = []
@@ -72,11 +76,7 @@ train_dataset = mnm_dataset.MnM(
     train_labels,
     augmentation=transform,
 )
-valid_dataset = mnm_dataset.MnM(
-    val_data, 
-    val_labels,
-    augmentation=transform
-)
+valid_dataset = mnm_dataset.MnM(val_data, val_labels, augmentation=transform)
 
 train_loader = DataLoader(
     train_dataset,
