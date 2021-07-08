@@ -1,8 +1,4 @@
-FROM ubuntu:20.04
-
-WORKDIR /workspace
-
-COPY . /workspace/
+FROM python:3.8 AS builder
+COPY requirements.txt .
 
 RUN pip install -r requirements.txt
-RUN pip install -e .
